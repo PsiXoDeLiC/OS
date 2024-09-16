@@ -1,0 +1,9 @@
+total 56
+drwxrwxr-x 3 vboxuser vboxuser  4096 сен 16 13:47 .
+drwxrwxr-x 7 vboxuser vboxuser  4096 сен  5 15:32 ..
+-rw-rw-r-- 1 vboxuser vboxuser    21 сен  5 16:14 batchfile
+-rw-rw-r-- 1 vboxuser vboxuser  8080 сен 16 13:40 main.c
+-rw-rw-r-- 1 vboxuser vboxuser    55 сен  5 15:32 makefile
+-rwxrwxr-x 1 vboxuser vboxuser 21864 сен 16 13:40 myshell
+-rw-rw-r-- 1 vboxuser vboxuser  2201 сен  5 15:32 readme
+drwxrwxr-x 2 vboxuser vboxuser  4096 сен 16 13:47 tmp
