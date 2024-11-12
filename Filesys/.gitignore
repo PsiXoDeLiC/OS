@@ -1,0 +1,4 @@
+app
+libsimplefs.a
+simplefs.o
+vdisk1.bin

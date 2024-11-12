@@ -1,4 +1,8 @@
 cd
-ls -la
+sleep 10 &
+echo tmp > tmp/in
+ls -la < tmp/in > tmp/out
+cat tmp/out
+ps
 echo done
 

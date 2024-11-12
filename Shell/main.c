@@ -108,13 +108,21 @@ void child_processing(int background, int input_fd, int output_fd) {
             close(output_fd);
         }
 
+        if (background) {
+            int devnull = open("/dev/null", O_RDWR);
+            dup2(devnull, STDIN_FILENO);
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+        }
+
         execvp(argument[0], argument);
         fprintf(stderr, "Command not found: %s\n", argument[0]);
         exit(EXIT_FAILURE);
     } else if (pid < 0) {
         fprintf(stderr, "Fork failed\n");
     } else {
-        if (!background) {  // Если нет фонового режима, ожидаем завершения
+        if (!background) {  
             int status;
             waitpid(pid, &status, 0);
         } else {
