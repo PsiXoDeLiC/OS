@@ -61,7 +61,7 @@ int create_vdisk (char *vdiskname, int m)
     int count;
     size  = num << m;
     count = size / BLOCKSIZE;
-    printf ("%d %d", m, size);
+    printf ("%d %d\n", m, size);
     sprintf (command, "dd if=/dev/zero of=%s bs=%d count=%d", vdiskname, BLOCKSIZE, count);
     printf ("executing command = %s\n", command);
     system (command);
@@ -97,7 +97,7 @@ int write_block (void *block, int k)
 
     offset = k * BLOCKSIZE;
     lseek(vdisk_fd, (off_t) offset, SEEK_SET);
-    n = write (vdisk_fd, block, BLOCKSIZE);
+    n = write (vdisk_fd, block, BLOCKSIZE);            
     if (n != BLOCKSIZE) {
         printf ("write error\n");
         return (-1);
@@ -113,6 +113,10 @@ int write_block (void *block, int k)
 int sfs_format(char *vdiskname) {
     vdisk_fd = open(vdiskname, O_RDWR);
     if (vdisk_fd == -1) return -1;
+    
+    for (int j = 0; j < 10; j++) {
+         open_files[j].file_index = -1;
+    }
 
     // Инициализация суперблока
     super_block.disk_size = lseek(vdisk_fd, 0, SEEK_END);
@@ -120,7 +124,7 @@ int sfs_format(char *vdiskname) {
     super_block.root_dir_start = 1;
     super_block.fat_start = 8;
     super_block.data_start = 1032;
-
+ 
     // Инициализация корневого каталога
     memset(root_dir, 0, sizeof(root_dir));
     for (int i = 0; i < MAX_FILES; i++) {
@@ -135,12 +139,13 @@ int sfs_format(char *vdiskname) {
     // Запись структуры на диск
     write_block(&super_block, 0);
     for (int i = 1; i < 8; i++) {
-        write_block(&root_dir[(i - 1) * (BLOCKSIZE / sizeof(DirectoryEntry))], i);
-    }
-    for (int i = 8; i < 1032; i++) {
-        write_block(&fat_table[(i - 8) * (BLOCKSIZE / sizeof(FATEntry))], i);
+        if(write_block(&root_dir[0], i) == -1) return -1;
     }
 
+    for (int i = 8; i < 1032; i++) {
+        if(write_block(&fat_table[0], i)== -1) return -1;
+    }
+    printf("The %s disk has been successfully formatted\n" , vdiskname);
     close(vdisk_fd);
     return 0;
 }
@@ -153,6 +158,7 @@ int sfs_mount (char *vdiskname)
     // vdisk_fd is global; hence other function can use it.
     vdisk_fd = open(vdiskname, O_RDWR);
     if(vdisk_fd == -1) return -1;
+    printf("The %s disk has been successfully mounted\n" , vdiskname);
     return(0);
 }
 
@@ -160,6 +166,7 @@ int sfs_umount ()
 {
     fsync (vdisk_fd);
     close (vdisk_fd);
+    printf("The disk has been successfully umounted\n");
     return (0);
 }
 
@@ -171,6 +178,7 @@ int sfs_create(char *filename) {
             strncpy(root_dir[i].filename, filename, FILENAME_LEN);
             root_dir[i].size = 0;
             root_dir[i].first_block = -1;
+            printf("The %s file has been successfully created\n" , filename);
             return 0;
         }
     }
@@ -187,6 +195,7 @@ int sfs_open(char *filename, int mode) {
                     open_files[j].file_index = i;
                     open_files[j].mode = mode;
                     open_files[j].current_position = (mode == 0) ? 0 : root_dir[i].size;
+                    printf("The %s file has been successfully openned, mode: %d \n" , filename, mode);
                     return j; // Вернём индекс как файловый дескриптор
                 }
             }
@@ -201,6 +210,7 @@ int sfs_close(int fd) {
         return -1;
     }
     open_files[fd].file_index = -1; // Освобождаем запись
+    printf("The file has been successfully closed\n");
     return 0;
 }
 
@@ -236,7 +246,7 @@ int sfs_read(int fd, void *buf, int n) {
     char block[BLOCKSIZE];
     while (bytes_to_read > 0 && current_block != -1) {
         read_block(block, current_block);
-
+	printf("Read block %d: %s\n", current_block, block);
         int to_copy = (bytes_to_read < BLOCKSIZE - offset) ? bytes_to_read : BLOCKSIZE - offset;
         memcpy((char *)buf + read_bytes, block + offset, to_copy);
 
@@ -291,6 +301,7 @@ int sfs_append(int fd, void *buf, int n) {
         offset = 0;
 
         write_block(block, current_block);
+        printf("Write block %d: %s\n", current_block, block);
         if (bytes_to_write > 0) {
             int new_block = -1;
             for (int i = 0; i < FAT_ENTRIES; i++) {
@@ -323,6 +334,7 @@ int sfs_delete(char *filename) {
                 current_block = next_block;
             }
             root_dir[i].is_used = 0;
+                printf("The %s file has been successfully deleted\n", filename);
             return 0;
         }
     }

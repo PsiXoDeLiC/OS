@@ -45,12 +45,12 @@ int main()
 
     fd1 = sfs_open ("file1.bin", MODE_APPEND);
     fd2 = sfs_open ("file2.bin", MODE_APPEND);
-    for (i = 0; i < 10000; ++i) {
+    for (i = 0; i < 100; ++i) {
         buffer[0] =   (char) 65;
         sfs_append (fd1, (void *) buffer, 1);
     }
-
-    for (i = 0; i < 10000; ++i) {
+    
+    for (i = 0; i < 100; ++i) {
         buffer[0] = (char) 70;
         buffer[1] = (char) 71;
         buffer[2] = (char) 72;
@@ -62,8 +62,16 @@ int main()
     sfs_close(fd2);
 
     fd = sfs_open("file3.bin", MODE_APPEND);
-    for (i = 0; i < 10000; ++i) {
+    for (i = 0; i < 10; ++i) {
         memcpy (buffer, buffer2, 8); // just to show memcpy
+        sfs_append(fd, (void *) buffer, 8);
+
+    }
+    sfs_close (fd);
+    
+    fd = sfs_open("file3.bin", MODE_APPEND);
+    for (i = 0; i < 10; ++i) {
+        memcpy (buffer, "add new data", 8); // just to show memcpy
         sfs_append(fd, (void *) buffer, 8);
 
     }
